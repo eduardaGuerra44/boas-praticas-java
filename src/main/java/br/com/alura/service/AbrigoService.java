@@ -1,21 +1,26 @@
 package br.com.alura.service;
 
+import br.com.alura.client.ClientHttpConfiguration;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Scanner;
+
+
 public class AbrigoService {
+    ClientHttpConfiguration clientHttp = new ClientHttpConfiguration();
+
+    public AbrigoService(ClientHttpConfiguration clientHttp) {
+        this.clientHttp = clientHttp;
+    }
+
     public void listarAbrigo() throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
         String uri = "http://localhost:8080/abrigos";
-        HttpResponse<String> response =  dispararRequisicaoGet(client, uri);
+        HttpResponse<String> response = clientHttp.dispararRequisicaoGet(uri);
         String responseBody = response.body();
         JsonArray jsonArray = JsonParser.parseString(responseBody).getAsJsonArray();
         System.out.println("Abrigos cadastrados:");
@@ -23,7 +28,7 @@ public class AbrigoService {
             JsonObject jsonObject = element.getAsJsonObject();
             long id = jsonObject.get("id").getAsLong();
             String nome = jsonObject.get("nome").getAsString();
-            System.out.println(id +" - " +nome);
+            System.out.println(id + " - " + nome);
         }
     }
 
@@ -40,9 +45,8 @@ public class AbrigoService {
         json.addProperty("telefone", telefone);
         json.addProperty("email", email);
 
-        HttpClient client = HttpClient.newHttpClient();
         String uri = "http://localhost:8080/abrigos";
-        HttpResponse<String> response = dispararRequisicaoPost(client, uri, json);
+        HttpResponse<String> response = clientHttp.dispararRequisicaoPost(uri, json);
         int statusCode = response.statusCode();
         String responseBody = response.body();
         if (statusCode == 200) {
@@ -53,24 +57,5 @@ public class AbrigoService {
             System.out.println(responseBody);
         }
     }
-    public HttpResponse<String> dispararRequisicaoGet(HttpClient client, String uri) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(uri))
-                .method("GET", HttpRequest.BodyPublishers.noBody())
-                .build();
 
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
-
-    }
-
-    public HttpResponse<String> dispararRequisicaoPost(HttpClient client, String uri, JsonObject json) throws IOException, InterruptedException {
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(uri))
-                .header("Content-Type", "application/json")
-                .method("POST", HttpRequest.BodyPublishers.ofString(json.toString()))
-                .build();
-
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
-    }
 }

@@ -1,5 +1,6 @@
 package br.com.alura.service;
 
+import br.com.alura.client.ClientHttpConfiguration;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -8,19 +9,24 @@ import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.util.Scanner;
 
 public class PetService {
-    AbrigoService abrigoService = new AbrigoService();
-    public  void listarPetsdoAbrigo() throws IOException, InterruptedException {
+
+    private final ClientHttpConfiguration clientHttp;
+
+    public PetService(ClientHttpConfiguration clientHttp) {
+        this.clientHttp = clientHttp;
+    }
+
+    public void listarPetsdoAbrigo() throws IOException, InterruptedException {
         System.out.println("Digite o id ou nome do abrigo:");
         String idOuNome = new Scanner(System.in).nextLine();
 
-        HttpClient client = HttpClient.newHttpClient();
-        String uri = "http://localhost:8080/abrigos/" +idOuNome +"/pets";
-        HttpResponse<String> response =  abrigoService.dispararRequisicaoGet(client, uri);
+
+        String uri = "http://localhost:8080/abrigos/" + idOuNome + "/pets";
+        HttpResponse<String> response = clientHttp.dispararRequisicaoGet(uri);
         int statusCode = response.statusCode();
         if (statusCode == 404 || statusCode == 500) {
             System.out.println("ID ou nome não cadastrado!");
@@ -36,10 +42,11 @@ public class PetService {
             String nome = jsonObject.get("nome").getAsString();
             String raca = jsonObject.get("raca").getAsString();
             int idade = jsonObject.get("idade").getAsInt();
-            System.out.println(id +" - " +tipo +" - " +nome +" - " +raca +" - " +idade +" ano(s)");
+            System.out.println(id + " - " + tipo + " - " + nome + " - " + raca + " - " + idade + " ano(s)");
         }
     }
-    public  void importarPetsDoAbrigo() throws IOException, InterruptedException {
+
+    public void importarPetsDoAbrigo() throws IOException, InterruptedException {
         System.out.println("Digite o id ou nome do abrigo:");
         String idOuNome = new Scanner(System.in).nextLine();
 
@@ -69,9 +76,9 @@ public class PetService {
             json.addProperty("idade", idade);
             json.addProperty("cor", cor);
             json.addProperty("peso", peso);
-            HttpClient client = HttpClient.newHttpClient();
+
             String uri = "http://localhost:8080/abrigos/" + idOuNome + "/pets";
-            HttpResponse<String> response = abrigoService.dispararRequisicaoPost(client, uri, json);
+            HttpResponse<String> response = clientHttp.dispararRequisicaoPost(uri, json);
             int statusCode = response.statusCode();
             String responseBody = response.body();
             if (statusCode == 200) {
